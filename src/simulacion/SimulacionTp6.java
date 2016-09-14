@@ -176,7 +176,7 @@ public class SimulacionTp6 {
 		Scanner sc = new Scanner(System.in);
 		mCantMotos = sc.nextInt();	//M
 		
-		tcm = new Date[mCantMotos];
+		tcm = new Date[mCantMotos-1];
 		
 		System.out.print("Ingrese hora de inicio (hh:mm:ss): ");
 		String horaInicio = sc.next();
