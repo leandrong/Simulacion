@@ -10,39 +10,31 @@ import java.util.Scanner;
 
 public class SimulacionTp6 {
 	
-	private static final String HORA_CERO = "00:00:00";
-	private static final String HORA_INICIAL_TCM_TCB = "20:15:00";
-	private static final String HORA_FINAL = "21:00:00";
-	private static final String HORA_INICIAL = "20:00:00";
-	static Date t, tf, tpll, menorTcm;
+	private static final int _0HS = 0;
+	private static final int _20_15HS = 1215;
+	private static final int _20HS = 1200;
+	private static final int _24HS = 1440;
 	static int mCantMotos; //M
 	static int bCantBicicletas; //B
-	static int p; //tipo de pedido
-	static int tc; //tiempo comprometido
-	static Date[] tcc, tcm, tcb, stom, stob;
 	static int indiceMenorTcc, indiceMenorTcm, indiceMenorTcb;
-	static int iA, tV;
+	static int t, tf, tpll, menorTcm;
 	static int sto = 0;
 	static int nt = 0;
 	static int str = 0;
+	static int[] tcc, tcm, tcb, stom, stob;
+	static int p; //tipo de pedido
+	static int tc; //tiempo comprometido
+	static int iA;
+	static int tV;
 	
 	public static void main(String arg[]){
 		
-		float r,k; //random
-		tcc = new Date[8];	//tiempo comprometido cocina
-		Date menorTcc;
-		int tp1 = 0; 
-		int tp2 = 0; 
-		int tp3 = 0; 
-		int tp4 = 0;
-		Date tcc1 = new Date();
-		Date tcc2 = new Date(); 
-		Date tcc3 = new Date();
-		Date tcc4 = new Date();
-		int tv1 = 0;
-		int tv2 = 0;
-		int tv3 = 0;
-		int tv4 = 0;
+		float r; //random
+		tcc = new int[8];
+		
+//		Date t, tf, tpll, menorTcm;
+//		Date[] tcc, tcm, tcb, stom, stob;
+//		tcc = new Date[8];	//tiempo comprometido cocina
 		
 		try {
 			condicionesIniciales();
@@ -50,19 +42,19 @@ public class SimulacionTp6 {
 			do {
 				t = tpll;
 				iA = getIntervaloArribo();
-				tpll = sumarMinutos(t,iA);
+				tpll = t + iA;
 				r = getRandom();
 	
 				setTipoPedidoYTc(r);
 				
 				indiceMenorTcc = getMenorTcx(tcc);
 				
-				if (t.before(tcc[indiceMenorTcc])) {	
+				if (t<tcc[indiceMenorTcc]) {	
 					//lado NO del diagrama con condicion t >= tcc(y)
-					tcc[indiceMenorTcc] = sumarMinutos(tcc[indiceMenorTcc], tc);
+					tcc[indiceMenorTcc] += tc;
 				} else {
 					//lado SI del diagrama con condicion t >= tcc(y)
-					tcc[indiceMenorTcc] = sumarMinutos(t, tc);
+					tcc[indiceMenorTcc] = t + tc;
 				}
 				
 				tV = getTiempoViaje();
@@ -74,45 +66,45 @@ public class SimulacionTp6 {
 				if (tV >10 || p==2) {
 					//moto
 					indiceMenorTcm = getMenorTcx(tcm);
-					if (tcc[indiceMenorTcc].before(tcm[indiceMenorTcm])) {
+					if (tcc[indiceMenorTcc] < tcm[indiceMenorTcm]) {
 						//lado NO
-						tcm[indiceMenorTcm] = sumarMinutos(tcm[indiceMenorTcm], tV);
+						tcm[indiceMenorTcm] += tV;
 					} else {
 						//lado SI
-						stom[indiceMenorTcm] = sumarMinutos(stom[indiceMenorTcm], restarMinutos(tcc[indiceMenorTcc], tcm[indiceMenorTcm]));
-						tcm[indiceMenorTcm] = sumarMinutos(tcc[indiceMenorTcc], tV);
+						stom[indiceMenorTcm] += tcc[indiceMenorTcc] - tcm[indiceMenorTcm];
+						tcm[indiceMenorTcm] = tcc[indiceMenorTcc] + tV;
 					}
 					calcularStrConTcm();
 				} else {
 					//bici o moto
 					indiceMenorTcb = getMenorTcx(tcb);
 					indiceMenorTcm = getMenorTcx(tcm);
-					if (tcb[indiceMenorTcb].after(tcm[indiceMenorTcm])) {
+					if (tcb[indiceMenorTcb] > tcm[indiceMenorTcm]) {
 						//lado NO
-						if (tcc[indiceMenorTcc].before(tcm[indiceMenorTcm])) {
+						if (tcc[indiceMenorTcc] < tcm[indiceMenorTcm]) {
 							//lado NO
-							tcm[indiceMenorTcm] = sumarMinutos(tcm[indiceMenorTcm], tV);
+							tcm[indiceMenorTcm] += tV;
 						} else {
 							//lado SI
-							stom[indiceMenorTcm] = sumarMinutos(stom[indiceMenorTcm], restarMinutos(tcc[indiceMenorTcc], tcm[indiceMenorTcm]));
-							tcm[indiceMenorTcm] = sumarMinutos(tcc[indiceMenorTcc], tV);
+							stom[indiceMenorTcm] += tcc[indiceMenorTcc] - tcm[indiceMenorTcm];
+							tcm[indiceMenorTcm] = tcc[indiceMenorTcc] + tV;
 						}
 						calcularStrConTcm();
 					} else {
 						//lado SI
-						if (tcc[indiceMenorTcc].before(tcb[indiceMenorTcb])) {
+						if (tcc[indiceMenorTcc] < tcb[indiceMenorTcb]) {
 							//lado NO
-							tcb[indiceMenorTcb] = sumarMinutos(tcb[indiceMenorTcb], tV);
+							tcb[indiceMenorTcb] += tV;
 						} else {
 							//lado SI
-							stob[indiceMenorTcb] = sumarMinutos(stob[indiceMenorTcb], restarMinutos(tcc[indiceMenorTcc], tcb[indiceMenorTcb]));
-							tcb[indiceMenorTcb] = sumarMinutos(tcc[indiceMenorTcc], tV);
+							stob[indiceMenorTcb] += tcc[indiceMenorTcc] - tcb[indiceMenorTcb];
+							tcb[indiceMenorTcb] = tcc[indiceMenorTcc] + tV;
 						}
 						calcularStrConTcb();
 					}
 				}
 				
-			} while (t.before(tf));
+			} while (t < tf);
 			
 			calcularTORestante();
 			
@@ -129,68 +121,57 @@ public class SimulacionTp6 {
 	private static void calcularTORestante() {
 		
 		for(int i=0; i<tcm.length; i++) {
-			if (tcm[i].before(tf)) {
-				stom[i] = sumarMinutos(stom[i], restarMinutos(tf, tcm[i]));
+			if (tcm[i] < tf) {
+				stom[i] += tf - tcm[i];
 			}
 		}
 	}
 
 	private static void calcularStrConTcb() {
-		String formatoHoras="HH";
-		String formatoMinutos="mm";
-		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
-		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+//		String formatoHoras="HH";
+//		String formatoMinutos="mm";
+//		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
+//		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+//		
+//		//paso el t a minutos ya que el str es sumatoria de minutos
+//		int tHoras = Integer.parseInt(dateFormatHours.format(t));
+//		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
+//		
+//		int tcbHoras = Integer.parseInt(dateFormatHours.format(tcb[indiceMenorTcb]));
+//		int tcbMinutos = Integer.parseInt(dateFormatMinutes.format(tcb[indiceMenorTcb])) + (tcbHoras*60); 
 		
-		//paso el t a minutos ya que el str es sumatoria de minutos
-		int tHoras = Integer.parseInt(dateFormatHours.format(t));
-		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
-		
-		int tcbHoras = Integer.parseInt(dateFormatHours.format(tcb[indiceMenorTcb]));
-		int tcbMinutos = Integer.parseInt(dateFormatMinutes.format(tcb[indiceMenorTcb])) + (tcbHoras*60); 
-		
-		str += (tcbMinutos - (tV/2) - tMinutos);
+		str += (tcb[indiceMenorTcb] - (tV/2) - t);
 	}
 
 	private static void calcularStrConTcm() {
-		String formatoHoras="HH";
-		String formatoMinutos="mm";
-		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
-		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+//		String formatoHoras="HH";
+//		String formatoMinutos="mm";
+//		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
+//		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+//		
+//		//paso el t a minutos ya que el str es sumatoria de minutos
+//		int tHoras = Integer.parseInt(dateFormatHours.format(t));
+//		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
+//		
+//		int tcmHoras = Integer.parseInt(dateFormatHours.format(tcm[indiceMenorTcm]));
+//		int tcmMinutos = Integer.parseInt(dateFormatMinutes.format(tcm[indiceMenorTcm])) + (tcmHoras*60); 
 		
-		//paso el t a minutos ya que el str es sumatoria de minutos
-		int tHoras = Integer.parseInt(dateFormatHours.format(t));
-		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
-		
-		int tcmHoras = Integer.parseInt(dateFormatHours.format(tcm[indiceMenorTcm]));
-		int tcmMinutos = Integer.parseInt(dateFormatMinutes.format(tcm[indiceMenorTcm])) + (tcmHoras*60); 
-		
-		str += (tcmMinutos - (tV/2) - tMinutos);
+		str += (tcm[indiceMenorTcm] - (tV/2) - t);
 	}
 
 	private static void mostrarResultados() {
 		
-		String formatoHoras="HH";
-		String formatoMinutos="mm";
-		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
-		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+		int tiMinutos = _20HS; //20hs x 60min = 1200min
 		
-		int tfHoras = Integer.parseInt(dateFormatHours.format(tf));
-		int tfMinutos = Integer.parseInt(dateFormatMinutes.format(tf)) + (tfHoras*60);
-		
-		int tiMinutos = 1200; //20hs x 60min = 1200min
-		
-		int stomMinutos, stobMinutos;
 		float[] ptom = new float[tcm.length];
 		float[] ptob = new float[tcb.length];
 		
 		for (int i=0; i<tcm.length; i++) {
-			stomMinutos = (Integer.parseInt(dateFormatHours.format(stom[i]))*60) + Integer.parseInt(dateFormatMinutes.format(stom[i]));
-			ptom[i] = (float) stomMinutos / (float) (tfMinutos - tiMinutos);
+			ptom[i] = (float) stom[i] / (float) (tf - tiMinutos);
 		}
 		
 		for (int i=0; i<tcb.length; i++) {
-			stobMinutos = (Integer.parseInt(dateFormatHours.format(stob[i]))*60) + Integer.parseInt(dateFormatMinutes.format(stob[i]));
-			ptob[i] = (float) stobMinutos / (float) (tfMinutos - tiMinutos);
+			ptob[i] = (float) stob[i] / (float) (tf - tiMinutos);
 		}
 		
 		float ptr = str / nt;
@@ -210,31 +191,16 @@ public class SimulacionTp6 {
 		}
 	}
 
-	private static int restarMinutos(Date date, Date tcc3) {
-		//TODO testear. y en los casos que tcc3 > date ? esto es posible?
-		// si eso es posible hay q modificar la logica, ya que
-		//Por ejemplo: 07:45:00 - 07:55:00 = 06:50:00 => la funcion esta retornando el numero 50.
-		
-		String formato="mm";
-		SimpleDateFormat dateFormat = new SimpleDateFormat(formato);
-		
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date); // Configuramos la fecha que se recibe
-		calendar.add(Calendar.MINUTE, Integer.parseInt(dateFormat.format(tcc3))*-1);  // numero de minutos a restar (por eso el * -1)
-		
-		return Integer.parseInt(dateFormat.format(calendar.getTime()));
-	}
-
 	private static int getTiempoViaje() {
 		// TODO Auto-generated method stub
 		return 20; //FIXME hardcodeo
 	}
 
-	private static int getMenorTcx(Date[] arrayTcx) {
-		Date menor = arrayTcx[0];
+	private static int getMenorTcx(int[] arrayTcx) {
+		int menor = arrayTcx[0];
 		int indiceMenorTcx = 0;
 		for (int i=0; i<arrayTcx.length; i++) {
-			if (arrayTcx[i].before(menor)) {
+			if (arrayTcx[i] < menor) {
 				menor = arrayTcx[i];
 				indiceMenorTcx = i;
 			}
@@ -260,54 +226,46 @@ public class SimulacionTp6 {
 		return rnd.nextFloat();
 	}
 
-	private static Date sumarMinutos(Date t, int iA) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(t); // Configuramos la fecha que se recibe
-		calendar.add(Calendar.MINUTE, iA);  // numero de minutos a añadir
-		
-		return calendar.getTime();
-	}
-
 	public static void condicionesIniciales() throws ParseException {
 		
 		System.out.print("Ingrese cantidad de motos: ");
 		Scanner sc = new Scanner(System.in);
 		mCantMotos = sc.nextInt();	//M
 		
-		tcm = new Date[mCantMotos-1];
-		stom = new Date[mCantMotos-1];
+		tcm = new int[mCantMotos-1];
+		stom = new int[mCantMotos-1];
 		
 		System.out.print("Ingrese cantidad de bicicletas: ");
 		bCantBicicletas = sc.nextInt();	//B
 		
-		tcb = new Date[bCantBicicletas-1];
-		stob = new Date[bCantBicicletas-1];
+		tcb = new int[bCantBicicletas-1];
+		stob = new int[bCantBicicletas-1];
 		
 		//asigno variables
-		SimpleDateFormat formatoFecha = new SimpleDateFormat("HH:mm:ss");
-		t = formatoFecha.parse(HORA_INICIAL);
-		tf = formatoFecha.parse(HORA_FINAL);
+		//SimpleDateFormat formatoFecha = new SimpleDateFormat("HH:mm:ss");
+		t = _20HS;
+		tf = _24HS;
 		tpll = t;
 		str = 0;
         
 		for (int i=0; i<tcc.length; i++) {
-			tcc[i] = formatoFecha.parse(HORA_INICIAL);
+			tcc[i] = _20HS;
 		}
 		
 		for (int i=0; i<tcm.length; i++) {
-			tcm[i] = formatoFecha.parse(HORA_INICIAL_TCM_TCB);
+			tcm[i] = _20_15HS;
 		}
 
 		for (int i=0; i<tcb.length; i++) {
-			tcb[i] = formatoFecha.parse(HORA_INICIAL_TCM_TCB);
+			tcb[i] = _20_15HS;
 		}
 		
 		for (int i=0; i<stom.length; i++) {
-			stom[i] = formatoFecha.parse(HORA_CERO);
+			stom[i] = _0HS;
 		}
 		
 		for (int i=0; i<stob.length; i++) {
-			stob[i] = formatoFecha.parse(HORA_CERO);
+			stob[i] = _0HS;
 		}
 
 		
@@ -318,5 +276,10 @@ public class SimulacionTp6 {
 		// TODO Auto-generated method stub
 		//retorna el iA en minutos
 		return 15;	//FIXME hardcodeo
+	}
+	
+
+	private static int abs (int numero) {
+	      return numero > 0 ? numero : -numero;
 	}
 }
