@@ -63,7 +63,7 @@ public class SimulacionTp6 {
 				
 				nt += 1;
 				
-				if (tV >10 || p==2) {
+				if (tV >15 || p==2) {
 					//moto
 					indiceMenorTcm = getMenorTcx(tcm);
 					if (tcc[indiceMenorTcc] < tcm[indiceMenorTcm]) {
@@ -228,14 +228,14 @@ public class SimulacionTp6 {
 		Scanner sc = new Scanner(System.in);
 		mCantMotos = sc.nextInt();	//M
 		
-		tcm = new int[mCantMotos-1];
-		stom = new int[mCantMotos-1];
+		tcm = new int[mCantMotos];
+		stom = new int[mCantMotos];
 		
 		System.out.print("Ingrese cantidad de bicicletas: ");
 		bCantBicicletas = sc.nextInt();	//B
 		
-		tcb = new int[bCantBicicletas-1];
-		stob = new int[bCantBicicletas-1];
+		tcb = new int[bCantBicicletas];
+		stob = new int[bCantBicicletas];
 		
 		//asigno variables
 		//SimpleDateFormat formatoFecha = new SimpleDateFormat("HH:mm:ss");
@@ -287,7 +287,6 @@ public class SimulacionTp6 {
 		
 		return (int)x;
 	}
-	
 
 	private static int abs (int numero) {
 	      return numero > 0 ? numero : -numero;
