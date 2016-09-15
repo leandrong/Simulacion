@@ -125,6 +125,12 @@ public class SimulacionTp6 {
 				stom[i] += tf - tcm[i];
 			}
 		}
+		
+		for(int i=0; i<tcb.length; i++) {
+			if (tcb[i] < tf) {
+				stob[i] += tf - tcb[i];
+			}
+		}
 	}
 
 	private static void calcularStrConTcb() {
@@ -168,8 +174,22 @@ public class SimulacionTp6 {
 	}
 
 	private static int getTiempoViaje() {
-		// TODO Auto-generated method stub
-		return 20; //FIXME hardcodeo
+		float r1, r2, x, y;
+		double fx;
+		
+		do {
+			r1 = getRandom();
+			r2 = getRandom();
+			
+			x = 19*r1 + 3;
+			y = (float) (r2*0.08);
+			
+			fx = 1.97*(Math.pow((x/16.5), 0.97)) / 16.5*Math.pow((1+(Math.pow((x/16.5),7.31))),1.27);
+			
+		} while (fx<y);
+		
+		
+		return (int)x;
 	}
 
 	private static int getMenorTcx(int[] arrayTcx) {
@@ -249,9 +269,23 @@ public class SimulacionTp6 {
 	}
 
 	private static int getIntervaloArribo() {
-		// TODO Auto-generated method stub
 		//retorna el iA en minutos
-		return 15;	//FIXME hardcodeo
+		float r1, r2, x, y;
+		double fx;
+		
+		do {
+			r1 = getRandom();
+			r2 = getRandom();
+			
+			x = 32*r1 + 1;
+			y = (float) (r2*0.15);
+			
+			fx = 0.12*(Math.pow(x, 0.86)) / Math.pow((1+0.48*(Math.pow(x,1.86))),2.26);
+			
+		} while (fx<y);
+		
+		
+		return (int)x;
 	}
 	
 
