@@ -128,34 +128,10 @@ public class SimulacionTp6 {
 	}
 
 	private static void calcularStrConTcb() {
-//		String formatoHoras="HH";
-//		String formatoMinutos="mm";
-//		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
-//		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
-//		
-//		//paso el t a minutos ya que el str es sumatoria de minutos
-//		int tHoras = Integer.parseInt(dateFormatHours.format(t));
-//		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
-//		
-//		int tcbHoras = Integer.parseInt(dateFormatHours.format(tcb[indiceMenorTcb]));
-//		int tcbMinutos = Integer.parseInt(dateFormatMinutes.format(tcb[indiceMenorTcb])) + (tcbHoras*60); 
-		
 		str += (tcb[indiceMenorTcb] - (tV/2) - t);
 	}
 
 	private static void calcularStrConTcm() {
-//		String formatoHoras="HH";
-//		String formatoMinutos="mm";
-//		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
-//		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
-//		
-//		//paso el t a minutos ya que el str es sumatoria de minutos
-//		int tHoras = Integer.parseInt(dateFormatHours.format(t));
-//		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
-//		
-//		int tcmHoras = Integer.parseInt(dateFormatHours.format(tcm[indiceMenorTcm]));
-//		int tcmMinutos = Integer.parseInt(dateFormatMinutes.format(tcm[indiceMenorTcm])) + (tcmHoras*60); 
-		
 		str += (tcm[indiceMenorTcm] - (tV/2) - t);
 	}
 
@@ -174,7 +150,7 @@ public class SimulacionTp6 {
 			ptob[i] = (float) stob[i] / (float) (tf - tiMinutos);
 		}
 		
-		float ptr = str / nt;
+		float ptr = (float) str / (float) nt;
 		
 		DecimalFormat decimales = new DecimalFormat("0.00");
 		
