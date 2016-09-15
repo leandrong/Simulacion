@@ -10,15 +10,21 @@ import java.util.Scanner;
 
 public class SimulacionTp6 {
 	
+	private static final String HORA_CERO = "00:00:00";
+	private static final String HORA_INICIAL_TCM_TCB = "20:15:00";
+	private static final String HORA_FINAL = "21:00:00";
+	private static final String HORA_INICIAL = "20:00:00";
 	static Date t, tf, tpll, menorTcm;
 	static int mCantMotos; //M
+	static int bCantBicicletas; //B
 	static int p; //tipo de pedido
 	static int tc; //tiempo comprometido
-	static Date[] tcc, tcm;
-	static int indiceMenorTcc, indiceMenorTcm;
+	static Date[] tcc, tcm, tcb, stom, stob;
+	static int indiceMenorTcc, indiceMenorTcm, indiceMenorTcb;
 	static int iA, tV;
 	static int sto = 0;
-	static int stv = 0;
+	static int nt = 0;
+	static int str = 0;
 	
 	public static void main(String arg[]){
 		
@@ -42,16 +48,16 @@ public class SimulacionTp6 {
 			condicionesIniciales();
 			
 			do {
+				t = tpll;
 				iA = getIntervaloArribo();
 				tpll = sumarMinutos(t,iA);
-				t = tpll;
 				r = getRandom();
 	
 				setTipoPedidoYTc(r);
 				
-				menorTcc = getMenorTcx(tcc,indiceMenorTcc);
+				indiceMenorTcc = getMenorTcx(tcc);
 				
-				if (t.before(menorTcc)) {	
+				if (t.before(tcc[indiceMenorTcc])) {	
 					//lado NO del diagrama con condicion t >= tcc(y)
 					tcc[indiceMenorTcc] = sumarMinutos(tcc[indiceMenorTcc], tc);
 				} else {
@@ -61,23 +67,54 @@ public class SimulacionTp6 {
 				
 				tV = getTiempoViaje();
 				
-				k = getRandom();
+				//k = getRandom();
 				
-				if (k<=0.14) {
-					//zona3
-					actualizarVariables(tp3,tcc3,tv3);
-				} else if (k<=0.23) {
-					//zona4
-					actualizarVariables(tp4,tcc4,tv4);
-				} else if (k <= 0.30) {
-					//zona1
-					actualizarVariables(tp1,tcc1,tv1);
+				nt += 1;
+				
+				if (tV >10 || p==2) {
+					//moto
+					indiceMenorTcm = getMenorTcx(tcm);
+					if (tcc[indiceMenorTcc].before(tcm[indiceMenorTcm])) {
+						//lado NO
+						tcm[indiceMenorTcm] = sumarMinutos(tcm[indiceMenorTcm], tV);
+					} else {
+						//lado SI
+						stom[indiceMenorTcm] = sumarMinutos(stom[indiceMenorTcm], restarMinutos(tcc[indiceMenorTcc], tcm[indiceMenorTcm]));
+						tcm[indiceMenorTcm] = sumarMinutos(tcc[indiceMenorTcc], tV);
+					}
+					calcularStrConTcm();
 				} else {
-					//zona2
-					actualizarVariables(tp2,tcc2,tv2);
+					//bici o moto
+					indiceMenorTcb = getMenorTcx(tcb);
+					indiceMenorTcm = getMenorTcx(tcm);
+					if (tcb[indiceMenorTcb].after(tcm[indiceMenorTcm])) {
+						//lado NO
+						if (tcc[indiceMenorTcc].before(tcm[indiceMenorTcm])) {
+							//lado NO
+							tcm[indiceMenorTcm] = sumarMinutos(tcm[indiceMenorTcm], tV);
+						} else {
+							//lado SI
+							stom[indiceMenorTcm] = sumarMinutos(stom[indiceMenorTcm], restarMinutos(tcc[indiceMenorTcc], tcm[indiceMenorTcm]));
+							tcm[indiceMenorTcm] = sumarMinutos(tcc[indiceMenorTcc], tV);
+						}
+						calcularStrConTcm();
+					} else {
+						//lado SI
+						if (tcc[indiceMenorTcc].before(tcb[indiceMenorTcb])) {
+							//lado NO
+							tcb[indiceMenorTcb] = sumarMinutos(tcb[indiceMenorTcb], tV);
+						} else {
+							//lado SI
+							stob[indiceMenorTcb] = sumarMinutos(stob[indiceMenorTcb], restarMinutos(tcc[indiceMenorTcc], tcb[indiceMenorTcb]));
+							tcb[indiceMenorTcb] = sumarMinutos(tcc[indiceMenorTcc], tV);
+						}
+						calcularStrConTcb();
+					}
 				}
 				
 			} while (t.before(tf));
+			
+			calcularTORestante();
 			
 			//mostrar resultados
 			mostrarResultados();
@@ -89,27 +126,88 @@ public class SimulacionTp6 {
 		}
 	}
 
-	private static void mostrarResultados() {
+	private static void calcularTORestante() {
+		
+		for(int i=0; i<tcm.length; i++) {
+			if (tcm[i].before(tf)) {
+				stom[i] = sumarMinutos(stom[i], restarMinutos(tf, tcm[i]));
+			}
+		}
+	}
+
+	private static void calcularStrConTcb() {
 		String formatoHoras="HH";
 		String formatoMinutos="mm";
 		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
 		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
 		
-		//paso el t a minutos ya que el sto es sumatoria de minutos
-		int horasDeT = Integer.parseInt(dateFormatHours.format(t));
-		int minutosDeT = Integer.parseInt(dateFormatMinutes.format(t));
+		//paso el t a minutos ya que el str es sumatoria de minutos
+		int tHoras = Integer.parseInt(dateFormatHours.format(t));
+		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
 		
-		//pto
-		float pto = (float)sto / (float)((horasDeT*60) + minutosDeT);
-		//ptv
-		float ptv = (float)stv / (float)((horasDeT*60) + minutosDeT);
+		int tcbHoras = Integer.parseInt(dateFormatHours.format(tcb[indiceMenorTcb]));
+		int tcbMinutos = Integer.parseInt(dateFormatMinutes.format(tcb[indiceMenorTcb])) + (tcbHoras*60); 
+		
+		str += (tcbMinutos - (tV/2) - tMinutos);
+	}
+
+	private static void calcularStrConTcm() {
+		String formatoHoras="HH";
+		String formatoMinutos="mm";
+		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
+		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+		
+		//paso el t a minutos ya que el str es sumatoria de minutos
+		int tHoras = Integer.parseInt(dateFormatHours.format(t));
+		int tMinutos = Integer.parseInt(dateFormatMinutes.format(t)) + (tHoras*60);
+		
+		int tcmHoras = Integer.parseInt(dateFormatHours.format(tcm[indiceMenorTcm]));
+		int tcmMinutos = Integer.parseInt(dateFormatMinutes.format(tcm[indiceMenorTcm])) + (tcmHoras*60); 
+		
+		str += (tcmMinutos - (tV/2) - tMinutos);
+	}
+
+	private static void mostrarResultados() {
+		
+		String formatoHoras="HH";
+		String formatoMinutos="mm";
+		SimpleDateFormat dateFormatMinutes = new SimpleDateFormat(formatoMinutos);
+		SimpleDateFormat dateFormatHours = new SimpleDateFormat(formatoHoras);
+		
+		int tfHoras = Integer.parseInt(dateFormatHours.format(tf));
+		int tfMinutos = Integer.parseInt(dateFormatMinutes.format(tf)) + (tfHoras*60);
+		
+		int tiMinutos = 1200; //20hs x 60min = 1200min
+		
+		int stomMinutos, stobMinutos;
+		float[] ptom = new float[tcm.length];
+		float[] ptob = new float[tcb.length];
+		
+		for (int i=0; i<tcm.length; i++) {
+			stomMinutos = (Integer.parseInt(dateFormatHours.format(stom[i]))*60) + Integer.parseInt(dateFormatMinutes.format(stom[i]));
+			ptom[i] = (float) stomMinutos / (float) (tfMinutos - tiMinutos);
+		}
+		
+		for (int i=0; i<tcb.length; i++) {
+			stobMinutos = (Integer.parseInt(dateFormatHours.format(stob[i]))*60) + Integer.parseInt(dateFormatMinutes.format(stob[i]));
+			ptob[i] = (float) stobMinutos / (float) (tfMinutos - tiMinutos);
+		}
+		
+		float ptr = str / nt;
 		
 		DecimalFormat decimales = new DecimalFormat("0.00");
 		
 		System.out.println("M: " + mCantMotos);
-		System.out.println("PTO: " + decimales.format(pto));
-		System.out.println("PTV: " + decimales.format(ptv));
+		System.out.println("B: " + bCantBicicletas);
+		System.out.println("PTR: " + decimales.format(ptr));
+
+		for (int i=0; i<ptob.length; i++) {
+			System.out.println("PTOB " + (i+1) + "/" + ptob.length + " :" + decimales.format(ptob[i]));	
+		}
 		
+		for (int i=0; i<ptom.length; i++) {
+			System.out.println("PTOM " + (i+1) + "/" + ptom.length + " :" + decimales.format(ptom[i]));	
+		}
 	}
 
 	private static int restarMinutos(Date date, Date tcc3) {
@@ -132,27 +230,27 @@ public class SimulacionTp6 {
 		return 20; //FIXME hardcodeo
 	}
 
-	private static Date getMenorTcx(Date[] arrayTcx, int indiceMenorTcx) {
+	private static int getMenorTcx(Date[] arrayTcx) {
 		Date menor = arrayTcx[0];
-		indiceMenorTcx = 0;
+		int indiceMenorTcx = 0;
 		for (int i=0; i<arrayTcx.length; i++) {
 			if (arrayTcx[i].before(menor)) {
 				menor = arrayTcx[i];
 				indiceMenorTcx = i;
 			}
 		}
-		return menor;
+		return indiceMenorTcx;
 	}
 
 	private static void setTipoPedidoYTc(float r) {
 		if (r<= 0.25) {
-			p = 2;
+			p = 1;
 			tc = 20;
-		} else if (r <= 0.35) {
+		} else if (r <= 0.60) {
 			p = 1;
 			tc = 15;
 		} else {
-			p = 4;
+			p = 2;
 			tc = 25;
 		}
 	}
@@ -177,34 +275,41 @@ public class SimulacionTp6 {
 		mCantMotos = sc.nextInt();	//M
 		
 		tcm = new Date[mCantMotos-1];
+		stom = new Date[mCantMotos-1];
 		
-		System.out.print("Ingrese hora de inicio (hh:mm:ss): ");
-		String horaInicio = sc.next();
+		System.out.print("Ingrese cantidad de bicicletas: ");
+		bCantBicicletas = sc.nextInt();	//B
 		
-		System.out.print("Ingrese hora fin (hh:mm:ss): ");
-		String horaFin = sc.next();
+		tcb = new Date[bCantBicicletas-1];
+		stob = new Date[bCantBicicletas-1];
 		
+		//asigno variables
 		SimpleDateFormat formatoFecha = new SimpleDateFormat("HH:mm:ss");
-		t = formatoFecha.parse(horaInicio);
-		tf = formatoFecha.parse(horaFin);
-		
-		//inicio array tcc y tcm
-		Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        
-        String formato="HH:mm:ss";
-		SimpleDateFormat dateFormat = new SimpleDateFormat(formato);
-		String horaCero = dateFormat.format(calendar.getTime());
+		t = formatoFecha.parse(HORA_INICIAL);
+		tf = formatoFecha.parse(HORA_FINAL);
+		tpll = t;
+		str = 0;
         
 		for (int i=0; i<tcc.length; i++) {
-			tcc[i] = formatoFecha.parse(horaCero);
+			tcc[i] = formatoFecha.parse(HORA_INICIAL);
 		}
 		
 		for (int i=0; i<tcm.length; i++) {
-			tcm[i] = formatoFecha.parse(horaCero);
+			tcm[i] = formatoFecha.parse(HORA_INICIAL_TCM_TCB);
 		}
+
+		for (int i=0; i<tcb.length; i++) {
+			tcb[i] = formatoFecha.parse(HORA_INICIAL_TCM_TCB);
+		}
+		
+		for (int i=0; i<stom.length; i++) {
+			stom[i] = formatoFecha.parse(HORA_CERO);
+		}
+		
+		for (int i=0; i<stob.length; i++) {
+			stob[i] = formatoFecha.parse(HORA_CERO);
+		}
+
 		
 		sc.close();
 	}
@@ -213,51 +318,5 @@ public class SimulacionTp6 {
 		// TODO Auto-generated method stub
 		//retorna el iA en minutos
 		return 15;	//FIXME hardcodeo
-	}
-	
-	private static void actualizarVariables(int tpX, Date tccX, int tvX) {
-		if (tpX==0) {
-			// primer pedido de la nueva entrega
-			tpX = p;
-			tccX = tcc[indiceMenorTcc];
-			tvX = tV;
-		} else {
-			if ((tpX * p <= 4) && (restarMinutos(tcc[indiceMenorTcc],tccX) < 15)) {
-				tpX += p;
-				if (tcc[indiceMenorTcc].after(tccX)) {	// pedido que mas tarda
-					tccX = tcc[indiceMenorTcc];
-				}
-				if(tV>tvX) {	// pedido mas lejos
-					tvX = tV;
-				}
-			} else {
-				menorTcm = getMenorTcx(tcm,indiceMenorTcm);
-				if (t.before(menorTcm)) {
-					// lado NO del diagrama con condicion t >= tcm(x)
-					tcc[indiceMenorTcc] = sumarMinutos(tcc[indiceMenorTcm], tc);
-				} else {
-					// lado SI del diagrama con condicion t >= tcm(x)
-					sto += restarMinutos(t,tcm[indiceMenorTcm]);
-					tcm[indiceMenorTcm] = sumarMinutos(t, tc);
-					stv += tvX;
-				}
-				tpX = p;
-				tccX = tcc[indiceMenorTcc];
-				tvX = tV;
-			}
-		}
-		
-		if (tpX == 4) {
-			menorTcm = getMenorTcx(tcm,indiceMenorTcm);
-			if (t.before(menorTcm)) {
-				// lado NO del diagrama con condicion t >= tcm(x)
-				tcc[indiceMenorTcc] = sumarMinutos(tcc[indiceMenorTcm], tc);
-			} else {
-				// lado SI del diagrama con condicion t >= tcm(x)
-				sto += restarMinutos(t,tcm[indiceMenorTcm]);
-				tcm[indiceMenorTcm] = sumarMinutos(t, tc);
-				stv += tvX;
-			}
-		}
 	}
 }
